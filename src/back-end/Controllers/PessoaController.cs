@@ -7,10 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiFinanceira;
 using ApiFinanceira.Models;
+using ApiFinanceira.DTOs;
 
 namespace ApiFinanceira.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("v1/[controller]")]
     [ApiController]
     public class PessoaController : ControllerBase
     {
@@ -21,14 +22,29 @@ namespace ApiFinanceira.Controllers
             _context = context;
         }
 
-        // GET: api/Pessoa
+        // GET: v1/Pessoa
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Pessoa>>> GetPessoas()
+        public async Task<ActionResult<PessoasRelatorioGeralDto>> GetPessoa()
         {
-            return await _context.Pessoas.ToListAsync();
+            var listaPessoas = await _context.Pessoas.Select(p => new PessoaRelatorioDto
+            {
+                Id = p.Id,
+                Nome = p.Nome,
+                TotalReceitas = p.Transacoes.Where(t => t.Tipo == Tipo.Receita).Sum(t => t.Valor),
+                TotalDespesas = p.Transacoes.Where(t => t.Tipo == Tipo.Despesa).Sum(t => t.Valor)
+            }).ToListAsync();
+
+            var relatorio = new PessoasRelatorioGeralDto
+            {
+                Pessoas = listaPessoas,
+                TotalGeralReceitas = listaPessoas.Sum(p => p.TotalReceitas),
+                TotalGeralDespesas = listaPessoas.Sum(p => p.TotalDespesas)
+            };
+
+            return relatorio;
         }
 
-        // GET: api/Pessoa/5
+        // GET: v1/Pessoa/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Pessoa>> GetPessoa(int id)
         {
@@ -42,8 +58,7 @@ namespace ApiFinanceira.Controllers
             return pessoa;
         }
 
-        // PUT: api/Pessoa/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // PUT: v1/Pessoa/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPessoa(int id, Pessoa pessoa)
         {
@@ -73,8 +88,7 @@ namespace ApiFinanceira.Controllers
             return NoContent();
         }
 
-        // POST: api/Pessoa
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // POST: v1/Pessoa
         [HttpPost]
         public async Task<ActionResult<Pessoa>> PostPessoa(Pessoa pessoa)
         {
@@ -84,7 +98,7 @@ namespace ApiFinanceira.Controllers
             return CreatedAtAction("GetPessoa", new { id = pessoa.Id }, pessoa);
         }
 
-        // DELETE: api/Pessoa/5
+        // DELETE: v1/Pessoa/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePessoa(int id)
         {
