@@ -14,6 +14,8 @@ public class Categoria
     [Required(ErrorMessage = "É obrigatório informar a finalidade."),
         EnumDataType(typeof(Finalidade), ErrorMessage = "Finalidade inválida.")]
      public Finalidade Finalidade { get; set; }
+
+     public ICollection<Transacao> Transacoes { get; set; } = [];
 }
 
 public enum Finalidade
