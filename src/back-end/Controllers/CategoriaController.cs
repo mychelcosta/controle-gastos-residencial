@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiFinanceira.Models;
+using ApiFinanceira.DTOs;
 
 namespace ApiFinanceira.Controllers
 {
@@ -17,10 +18,49 @@ namespace ApiFinanceira.Controllers
 
         // GET: v1/Categoria
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Categoria>>> GetCategorias()
+        public async Task<ActionResult<CategoriaRelatorioGeralDto>> GetCategorias()
         {
-            return await _context.Categorias.ToListAsync();
+            //return await _context.Categorias.ToListAsync();
+            var listaCategorias = await _context.Categorias.Select(c => new CategoriaRelatorioDto
+            {
+                Id = c.Id,
+                Descricao = c.Descricao,
+                Finalidade = c.Finalidade.ToString(),
+                TotalReceitas = c.Transacoes.Where(t => t.Tipo == Tipo.Receita).Sum(t => t.Valor),
+                TotalDespesas = c.Transacoes.Where(t => t.Tipo == Tipo.Despesa).Sum(t => t.Valor)
+            }).ToListAsync();
+
+            var relatorio = new CategoriaRelatorioGeralDto
+            {
+                Categorias = listaCategorias,
+                TotalGeralReceitas = listaCategorias.Sum(c => c.TotalReceitas),
+                TotalGeralDespesas = listaCategorias.Sum(c => c.TotalDespesas)
+            };
+
+            return relatorio;
         }
+
+        // GET: v1/Categoria/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<CategoriaRelatorioDto>> GetCategoria(int id)
+        {
+            var categoria = await _context.Categorias.Select(c => new CategoriaRelatorioDto
+            {
+                Id = c.Id,
+                Descricao = c.Descricao,
+                Finalidade = c.Finalidade.ToString(),
+                TotalReceitas = c.Transacoes.Where(t => t.Tipo == Tipo.Receita).Sum(t => t.Valor),
+                TotalDespesas = c.Transacoes.Where(t => t.Tipo == Tipo.Despesa).Sum(t => t.Valor)
+            }).FirstOrDefaultAsync(c => c.Id == id);
+
+            if (categoria == null)
+            {
+                return NotFound();
+            }
+
+            return categoria;
+        }
+
 
         // POST: v1/Categoria
         [HttpPost]
@@ -29,7 +69,14 @@ namespace ApiFinanceira.Controllers
             _context.Categorias.Add(categoria);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCategoria", new { id = categoria.Id }, categoria);
+            var resposta = new CategoriaCriadaDto
+            {
+                Id = categoria.Id,
+                Descricao = categoria.Descricao,
+                Finalidade = categoria.Finalidade.ToString()
+            };
+
+            return CreatedAtAction("GetCategoria", new { id = categoria.Id }, resposta);
         }
     }
 }
