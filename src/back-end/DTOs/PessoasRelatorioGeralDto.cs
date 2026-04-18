@@ -1,6 +1,6 @@
 ﻿using ApiFinanceira.DTOs;
 
-namespace ApiFinanceira;
+namespace ApiFinanceira.DTOs;
 
 public class PessoasRelatorioGeralDto
 {

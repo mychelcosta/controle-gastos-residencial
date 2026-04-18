@@ -30,6 +30,7 @@ namespace ApiFinanceira.Controllers
             {
                 Id = p.Id,
                 Nome = p.Nome,
+                Idade = p.Idade,
                 TotalReceitas = p.Transacoes.Where(t => t.Tipo == Tipo.Receita).Sum(t => t.Valor),
                 TotalDespesas = p.Transacoes.Where(t => t.Tipo == Tipo.Despesa).Sum(t => t.Valor)
             }).ToListAsync();
@@ -46,9 +47,16 @@ namespace ApiFinanceira.Controllers
 
         // GET: v1/Pessoa/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Pessoa>> GetPessoa(int id)
+        public async Task<ActionResult<PessoaRelatorioDto>> GetPessoa(int id)
         {
-            var pessoa = await _context.Pessoas.FindAsync(id);
+            var pessoa = await _context.Pessoas.Select(p => new PessoaRelatorioDto
+            {
+                Id = p.Id,
+                Nome = p.Nome,
+                Idade = p.Idade,
+                TotalReceitas = p.Transacoes.Where(t => t.Tipo == Tipo.Receita).Sum(t => t.Valor),
+                TotalDespesas = p.Transacoes.Where(t => t.Tipo == Tipo.Despesa).Sum(t => t.Valor)
+            }).FirstOrDefaultAsync(p => p.Id == id);
 
             if (pessoa == null)
             {
