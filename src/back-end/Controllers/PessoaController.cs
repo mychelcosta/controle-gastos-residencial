@@ -1,11 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ApiFinanceira;
 using ApiFinanceira.Models;
 using ApiFinanceira.DTOs;
 
@@ -103,7 +97,14 @@ namespace ApiFinanceira.Controllers
             _context.Pessoas.Add(pessoa);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetPessoa", new { id = pessoa.Id }, pessoa);
+            var resposta = new PessoaCriadaDto
+            {
+                Id = pessoa.Id,
+                Nome = pessoa.Nome,
+                Idade = pessoa.Idade
+            };
+
+            return CreatedAtAction("GetPessoa", new { id = pessoa.Id }, resposta);
         }
 
         // DELETE: v1/Pessoa/5
