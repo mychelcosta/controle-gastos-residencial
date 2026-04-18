@@ -18,7 +18,7 @@ namespace ApiFinanceira.Controllers
 
         // GET: v1/Transacao
         [HttpGet]
-        public async Task<ActionResult<TransacaoCriadaDto>> GetTransacoes()
+        public async Task<ActionResult<IEnumerable<TransacaoCriadaDto>>> GetTransacoes()
         {
             var listaTransacoes = await _context.Transacoes.Select(t => new TransacaoCriadaDto
             {
@@ -30,7 +30,29 @@ namespace ApiFinanceira.Controllers
                 CategoriaId = t.CategoriaId
             }).ToListAsync();
 
-            return Ok(listaTransacoes);
+            return listaTransacoes;
+        }
+
+        // GET: v1/Transacao/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<TransacaoCriadaDto>> GetTransacao(int id)
+        {
+            var transacao = await _context.Transacoes.Select(t => new TransacaoCriadaDto
+            {
+                Id = t.Id,
+                Descricao = t.Descricao,
+                Valor = t.Valor,
+                Tipo = t.Tipo.ToString(),
+                PessoaId = t.PessoaId,
+                CategoriaId = t.CategoriaId
+            }).FirstOrDefaultAsync(t => t.Id == id);
+
+            if (transacao == null)
+            {
+                return NotFound();
+            }
+
+            return transacao;
         }
 
         // POST: v1/Transacao
