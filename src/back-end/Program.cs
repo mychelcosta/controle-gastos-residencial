@@ -18,8 +18,9 @@ builder.Services.AddOpenApi("v1", o =>
         };
         
         document.Servers = 
-        [   
-            new() { Url = "http://localhost:5139" , Description = "Servidor Local" }
+        [
+            new() { Url = "http://localhost:5139", Description = "Servidor Local (HTTP)" },
+            new() { Url = "https://localhost:7163", Description = "Servidor Local (HTTPS)" }
         ];
         
         document.ExternalDocs = new()
@@ -49,6 +50,9 @@ app.MapScalarApiReference("/scalar", options =>
 {
     options.WithOpenApiRoutePattern("/docs/{documentName}.json");
     options.AddDocument("v1", "ApiFinanceira - v1");
+    options.ShowDeveloperTools = DeveloperToolsVisibility.Never;
+    options.DisableMcp();
+    options.HideClientButton();
 });
 
 app.UseHttpsRedirection();
