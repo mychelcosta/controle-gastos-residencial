@@ -62,7 +62,7 @@ namespace ApiFinanceira.Controllers
 
         // PUT: v1/Pessoa/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPessoa(int id, Pessoa pessoa)
+        public async Task<IActionResult> PutPessoa(int id, PessoaCriadaDto pessoa)
         {
             if (id != pessoa.Id)
             {
@@ -92,19 +92,25 @@ namespace ApiFinanceira.Controllers
 
         // POST: v1/Pessoa
         [HttpPost]
-        public async Task<ActionResult<Pessoa>> PostPessoa(Pessoa pessoa)
+        public async Task<ActionResult<Pessoa>> PostPessoa(PessoaCriarDto pessoa)
         {
-            _context.Pessoas.Add(pessoa);
-            await _context.SaveChangesAsync();
-
-            var resposta = new PessoaCriadaDto
+            var novaPessoa = new Pessoa
             {
-                Id = pessoa.Id,
                 Nome = pessoa.Nome,
                 Idade = pessoa.Idade
             };
 
-            return CreatedAtAction("GetPessoa", new { id = pessoa.Id }, resposta);
+            _context.Pessoas.Add(novaPessoa);
+            await _context.SaveChangesAsync();
+
+            var resposta = new PessoaCriadaDto
+            {
+                Id = novaPessoa.Id,
+                Nome = novaPessoa.Nome,
+                Idade = novaPessoa.Idade
+            };
+
+            return CreatedAtAction("GetPessoa", new { id = novaPessoa.Id }, resposta);
         }
 
         // DELETE: v1/Pessoa/5
