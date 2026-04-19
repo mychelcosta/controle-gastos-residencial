@@ -61,22 +61,33 @@ namespace ApiFinanceira.Controllers
             return categoria;
         }
 
-
         // POST: v1/Categoria
         [HttpPost]
-        public async Task<ActionResult<Categoria>> PostCategoria(Categoria categoria)
+        public async Task<ActionResult<Categoria>> PostCategoria(CategoriaCriarDto categoria)
         {
-            _context.Categorias.Add(categoria);
+
+            if (categoria.Finalidade < 1 || categoria.Finalidade > 3)
+            {
+                return BadRequest("Finalidade de categoria inválida. Use 1 para Receita, 2 para Despesa ou 3 para Ambas.");
+            }
+
+            var novaCategoria = new Categoria
+            {
+                Descricao = categoria.Descricao,
+                Finalidade = (Finalidade)categoria.Finalidade
+            };
+
+            _context.Categorias.Add(novaCategoria);
             await _context.SaveChangesAsync();
 
             var resposta = new CategoriaCriadaDto
             {
-                Id = categoria.Id,
-                Descricao = categoria.Descricao,
-                Finalidade = categoria.Finalidade.ToString()
+                Id = novaCategoria.Id,
+                Descricao = novaCategoria.Descricao,
+                Finalidade = novaCategoria.Finalidade.ToString()
             };
 
-            return CreatedAtAction("GetCategoria", new { id = categoria.Id }, resposta);
+            return CreatedAtAction("GetCategoria", new { id = novaCategoria.Id }, resposta);
         }
     }
 }
