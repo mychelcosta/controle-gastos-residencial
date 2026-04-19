@@ -57,50 +57,57 @@ namespace ApiFinanceira.Controllers
 
         // POST: v1/Transacao
         [HttpPost]
-        public async Task<ActionResult<Transacao>> PostTransacao(Transacao transacao)
+        public async Task<ActionResult<Transacao>> PostTransacao(TransacaoCriarDto transacao)
         {
             var pessoa = await _context.Pessoas.FindAsync(transacao.PessoaId);
             var categoria = await _context.Categorias.FindAsync(transacao.CategoriaId);
 
-            if (pessoa == null)
-            {
-                return BadRequest($"Pessoa com ID {transacao.PessoaId} não encontrada.");
-            }
+            if (pessoa == null) return BadRequest($"Pessoa com ID {transacao.PessoaId} não encontrada.");
+            if (categoria == null) return BadRequest($"Categoria com ID {transacao.CategoriaId} não encontrada.");
 
-            if (categoria == null)
-            {
-                return BadRequest($"Categoria com ID {transacao.CategoriaId} não encontrada.");
-            }
-
-            if (pessoa.Idade < 18 && transacao.Tipo == Tipo.Receita)
+            if (pessoa.Idade < 18 && transacao.Tipo == (int)Tipo.Receita)
             {
                 return BadRequest("Pessoas menores de 18 anos não podem registrar receitas.");
             }
 
-            if (transacao.Tipo == Tipo.Despesa && categoria.Finalidade == Finalidade.Receita)
+            if (transacao.Tipo != (int)Tipo.Receita && transacao.Tipo != (int)Tipo.Despesa)
+            {
+                return BadRequest("Tipo de transação inválido. Use 1 para Receita ou 2 para Despesa.");
+            }
+
+            if (transacao.Tipo == (int)Tipo.Despesa && categoria.Finalidade == Finalidade.Receita)
             {
                 return BadRequest("Não é permitido registrar uma despesa em uma categoria exclusiva de receita.");
             }
 
-            if (transacao.Tipo == Tipo.Receita && categoria.Finalidade == Finalidade.Despesa)
+            if (transacao.Tipo == (int)Tipo.Receita && categoria.Finalidade == Finalidade.Despesa)
             {
                 return BadRequest("Não é permitido registrar uma receita em uma categoria exclusiva de despesa.");
             }
 
-            _context.Transacoes.Add(transacao);
-            await _context.SaveChangesAsync();
-
-            var resposta = new TransacaoCriadaDto
+            var novaTransacao = new Transacao
             {
-                Id = transacao.Id,
                 Descricao = transacao.Descricao,
                 Valor = transacao.Valor,
-                Tipo = transacao.Tipo.ToString(),
+                Tipo = (Tipo)transacao.Tipo,
                 PessoaId = transacao.PessoaId,
                 CategoriaId = transacao.CategoriaId
             };
 
-            return CreatedAtAction("GetTransacao", new { id = transacao.Id }, resposta);
+            _context.Transacoes.Add(novaTransacao);
+            await _context.SaveChangesAsync();
+            
+            var resposta = new TransacaoCriadaDto
+            {
+                Id = novaTransacao.Id,
+                Descricao = novaTransacao.Descricao,
+                Valor = novaTransacao.Valor,
+                Tipo = novaTransacao.Tipo.ToString(),
+                PessoaId = novaTransacao.PessoaId,
+                CategoriaId = novaTransacao.CategoriaId
+            };
+
+            return CreatedAtAction("GetTransacao", new { id = novaTransacao.Id }, resposta);
         }
     }
 }
